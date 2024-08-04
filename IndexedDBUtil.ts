@@ -1,21 +1,3 @@
-// 현재 데이터베이스 버전 가져오기
-const getCurrentDBVersion = (dbName: string): Promise<number> => {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(dbName)
-
-        request.onsuccess = (e) => {
-            const db = (e.target as IDBRequest).result
-            const { version } = db
-            db.close()
-            resolve(version)
-        }
-
-        request.onerror = (e) => {
-            reject((e.target as IDBRequest).error)
-        }
-    })
-}
-
 // 데이터베이스 열기
 export const openDB = (
     dbName: string, // 데이터베이스 이름
@@ -56,11 +38,29 @@ export const openDB = (
  * */
 export const deleteDB = async (dbName: string) => {
     return new Promise((resolve, reject) => {
-        const deleteRequest = window.indexedDB.deleteDatabase(dbName)
+        const deleteRequest = indexedDB.deleteDatabase(dbName)
         deleteRequest.onsuccess = (e) => {
             resolve((e.target as IDBRequest).result)
         }
         deleteRequest.onerror = (e) => {
+            reject((e.target as IDBRequest).error)
+        }
+    })
+}
+
+// 현재 데이터베이스 버전 가져오기
+const getCurrentDBVersion = (dbName: string): Promise<number> => {
+    return new Promise((resolve, reject) => {
+        const openRequest = indexedDB.open(dbName)
+
+        openRequest.onsuccess = (e) => {
+            const db = (e.target as IDBRequest).result
+            const { version } = db
+            db.close()
+            resolve(version)
+        }
+
+        openRequest.onerror = (e) => {
             reject((e.target as IDBRequest).error)
         }
     })
@@ -183,11 +183,11 @@ export const update = async <T>(
         const objStoreRequest = store.get(key)
 
         objStoreRequest.onsuccess = () => {
-            const setRequest = store.put(item, key)
-            setRequest.onsuccess = (e) => {
+            const putRequest = store.put(item, key)
+            putRequest.onsuccess = (e) => {
                 resolve((e.target as IDBRequest).result)
             }
-            setRequest.onerror = (e) => {
+            putRequest.onerror = (e) => {
                 reject((e.target as IDBRequest).error)
             }
         }
